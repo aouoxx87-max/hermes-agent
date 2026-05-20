@@ -1,0 +1,383 @@
+cli.py
+  8dbbda79e0fd7598 5922
+  356b28e280c053a1 5923-5924 gitai:{"mixed_line_ranges":[{"Single":5924}],"operations":[]}
+  216bafa5f7bf2d1d 6031
+  f124e057105ab26f 5934
+  de4167bae2b633c2 5930,5941-5944,5947,5964,5982,6001,6004,6025,6030,6034-6040,6043-6044,6046,6050-6051,6053,6057,6065-6070,6114 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a0d1bd12928e190cc1dd074","tool_type":"agent","tool_id":"SearchReplace","line_ranges":[{"Single":5930},{"Range":[5941,5944]},{"Single":5947},{"Single":5964},{"Single":5982},{"Single":6001},{"Single":6004},{"Single":6025},{"Single":6030},{"Range":[6034,6040]},{"Range":[6043,6044]},{"Single":6046},{"Range":[6050,6051]},{"Single":6053},{"Single":6057},{"Range":[6065,6070]},{"Single":6114}]}]}
+inject_cookies.py
+  de4167bae2b633c2 6-183 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a0d1bd12928e190cc1dd074","tool_type":"agent","tool_id":"SearchReplace","line_ranges":[{"Range":[6,183]}]}]}
+tools/browser_tool.py
+  de4167bae2b633c2 1321-1339 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a0d1bd12928e190cc1dd074","tool_type":"agent","tool_id":"SearchReplace","line_ranges":[{"Range":[1321,1339]}]}]}
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "277faaf2f73ae4e06457a8c19353092df54f20fc",
+  "prompts": {
+    "07eb5820cbbdf724": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-fc846cf9-ba4a-4d4e-b4e7-da6d9d4bdbb2",
+        "model": "default"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "216bafa5f7bf2d1d": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-cf2ec834-f1bd-4574-b103-e6e3b9bea0f3",
+        "model": "default"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "356b28e280c053a1": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-4971cb06-53d4-4105-a5cd-77d83095db73",
+        "model": "default"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 1
+    },
+    "50e9d1cee4c2d88f": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-c25359f6-b7f4-4cb8-b4dc-18012dfd0e0b",
+        "model": "default"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "52e0141141b6f76b": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-59992596-108f-4c9f-86af-277359cfbbf7",
+        "model": "default"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "7b6b2b00c3c7b522": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-1b548e9b-63f4-4a32-b136-ec6690d5ba13",
+        "model": "default"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "8dbbda79e0fd7598": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-d4214cfa-1e87-4421-a76e-491e0be8be08",
+        "model": "default"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "959e4e136d9deb1e": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-b91b3fc7-1ff1-4f6c-a12f-e92e32de262e",
+        "model": "default"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "de4167bae2b633c2": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a0be6f02928e190cc1dcbec",
+        "model": "openrouter-2o__dev"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 58,
+      "total_deletions": 25,
+      "accepted_lines": 50,
+      "overriden_lines": 0
+    },
+    "f124e057105ab26f": {
+      "agent_id": {
+        "tool": "trae-cue",
+        "id": "ai_tab-icr-53c1f57d-67ad-421a-8b46-d328071c71b7",
+        "model": "default"
+      },
+      "human_author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  },
+  "attestation_metadata": {
+    "cli.py": [
+      {
+        "hash": "356b28e280c053a1",
+        "line_ranges": [
+          {
+            "Range": [
+              5923,
+              5924
+            ]
+          }
+        ],
+        "mixed_line_ranges": [
+          {
+            "Single": 5924
+          }
+        ],
+        "operations": []
+      },
+      {
+        "hash": "de4167bae2b633c2",
+        "line_ranges": [
+          {
+            "Single": 5930
+          },
+          {
+            "Range": [
+              5941,
+              5944
+            ]
+          },
+          {
+            "Single": 5947
+          },
+          {
+            "Single": 5964
+          },
+          {
+            "Single": 5982
+          },
+          {
+            "Single": 6001
+          },
+          {
+            "Single": 6004
+          },
+          {
+            "Single": 6025
+          },
+          {
+            "Single": 6030
+          },
+          {
+            "Range": [
+              6034,
+              6040
+            ]
+          },
+          {
+            "Range": [
+              6043,
+              6044
+            ]
+          },
+          {
+            "Single": 6046
+          },
+          {
+            "Range": [
+              6050,
+              6051
+            ]
+          },
+          {
+            "Single": 6053
+          },
+          {
+            "Single": 6057
+          },
+          {
+            "Range": [
+              6065,
+              6070
+            ]
+          },
+          {
+            "Single": 6114
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a0d1bd12928e190cc1dd074",
+            "tool_type": "agent",
+            "tool_id": "SearchReplace",
+            "line_ranges": [
+              {
+                "Single": 5930
+              },
+              {
+                "Range": [
+                  5941,
+                  5944
+                ]
+              },
+              {
+                "Single": 5947
+              },
+              {
+                "Single": 5964
+              },
+              {
+                "Single": 5982
+              },
+              {
+                "Single": 6001
+              },
+              {
+                "Single": 6004
+              },
+              {
+                "Single": 6025
+              },
+              {
+                "Single": 6030
+              },
+              {
+                "Range": [
+                  6034,
+                  6040
+                ]
+              },
+              {
+                "Range": [
+                  6043,
+                  6044
+                ]
+              },
+              {
+                "Single": 6046
+              },
+              {
+                "Range": [
+                  6050,
+                  6051
+                ]
+              },
+              {
+                "Single": 6053
+              },
+              {
+                "Single": 6057
+              },
+              {
+                "Range": [
+                  6065,
+                  6070
+                ]
+              },
+              {
+                "Single": 6114
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "inject_cookies.py": [
+      {
+        "hash": "de4167bae2b633c2",
+        "line_ranges": [
+          {
+            "Range": [
+              6,
+              183
+            ]
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a0d1bd12928e190cc1dd074",
+            "tool_type": "agent",
+            "tool_id": "SearchReplace",
+            "line_ranges": [
+              {
+                "Range": [
+                  6,
+                  183
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "tools/browser_tool.py": [
+      {
+        "hash": "de4167bae2b633c2",
+        "line_ranges": [
+          {
+            "Range": [
+              1321,
+              1339
+            ]
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a0d1bd12928e190cc1dd074",
+            "tool_type": "agent",
+            "tool_id": "SearchReplace",
+            "line_ranges": [
+              {
+                "Range": [
+                  1321,
+                  1339
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "remote_transcripts": {
+    "de4167bae2b633c2": {
+      "tool": "trae",
+      "conversation_id": "6a0be6f02928e190cc1dcbec",
+      "session_id": "6a0be6f02928e190cc1dcbec",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    }
+  }
+}
