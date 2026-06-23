@@ -1777,6 +1777,66 @@ def _create_cdp_session(task_id: str, cdp_url: str) -> Dict[str, str]:
     }
 
 
+def _maybe_create_local_chromium_cdp_session(task_id: str) -> Optional[Dict[str, str]]:
+    """Try to attach to a local Chromium-family browser via CDP (Plan C).
+
+    Reads ``browser.prefer_local_chromium`` / ``cdp_port`` / ``executable_path``
+    / ``user_data_dir`` from ``config.yaml``.  Returns a CDP session dict when a
+    local browser is reachable (or could be auto-launched), or ``None`` when
+    the feature is disabled or no Chromium-family binary is available — so
+    callers can fall back to the legacy agent-browser local launcher.
+    """
+    try:
+        from hermes_cli.config import read_raw_config
+        cfg = read_raw_config()
+    except Exception as exc:
+        logger.debug("prefer_local_chromium: cannot read config (%s); skipping", exc)
+        return None
+
+    browser_cfg = cfg.get("browser", {}) if isinstance(cfg, dict) else {}
+    if not isinstance(browser_cfg, dict):
+        return None
+    if not browser_cfg.get("prefer_local_chromium", False):
+        return None
+
+    try:
+        from hermes_cli.browser_connect import (
+            DEFAULT_BROWSER_CDP_PORT,
+            ensure_local_chromium_cdp,
+        )
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.debug("prefer_local_chromium: cannot import helper (%s); skipping", exc)
+        return None
+
+    try:
+        port_raw = browser_cfg.get("cdp_port") or DEFAULT_BROWSER_CDP_PORT
+        port = int(port_raw)
+    except (TypeError, ValueError):
+        port = DEFAULT_BROWSER_CDP_PORT
+
+    executable_path = str(browser_cfg.get("executable_path") or "") or None
+    user_data_dir = str(browser_cfg.get("user_data_dir") or "") or None
+
+    cdp_url = ensure_local_chromium_cdp(
+        port=port,
+        executable_path=executable_path,
+        user_data_dir=user_data_dir,
+    )
+    if not cdp_url:
+        logger.debug(
+            "prefer_local_chromium: no local Chromium reachable on port %s; "
+            "falling back to agent-browser local launcher",
+            port,
+        )
+        return None
+
+    logger.info(
+        "prefer_local_chromium: attaching task %s to local Chromium via CDP (%s)",
+        task_id, cdp_url,
+    )
+    return _create_cdp_session(task_id, cdp_url)
+
+
 def _get_session_info(task_id: Optional[str] = None) -> Dict[str, str]:
     """
     Get or create session info for the given session key.
@@ -1820,11 +1880,17 @@ def _get_session_info(task_id: Optional[str] = None) -> Dict[str, str]:
     if cdp_override and not force_local:
         session_info = _create_cdp_session(task_id, cdp_override)
     elif force_local:
-        session_info = _create_local_session(task_id)
+        session_info = (
+            _maybe_create_local_chromium_cdp_session(task_id)
+            or _create_local_session(task_id)
+        )
     else:
         provider = _get_cloud_provider()
         if provider is None:
-            session_info = _create_local_session(task_id)
+            session_info = (
+                _maybe_create_local_chromium_cdp_session(task_id)
+                or _create_local_session(task_id)
+            )
         else:
             try:
                 session_info = provider.create_session(task_id)
@@ -1869,8 +1935,10 @@ def _get_session_info(task_id: Optional[str] = None) -> Dict[str, str]:
     # Lazy-start the CDP supervisor now that the session exists (if the
     # backend surfaces a CDP URL via override or session_info["cdp_url"]).
     # Idempotent; swallows errors. See _ensure_cdp_supervisor for details.
-    # Skip for local sidecars — they have no CDP URL.
-    if not force_local:
+    # Skip for pure local sessions — they have no CDP URL.  A force_local
+    # task that got upgraded to a CDP session via prefer_local_chromium
+    # still needs a supervisor.
+    if session_info.get("cdp_url"):
         _ensure_cdp_supervisor(task_id)
 
     return session_info

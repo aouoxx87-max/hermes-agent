@@ -29,7 +29,9 @@ from rich.panel import Panel
 
 from hermes_constants import display_hermes_home, is_termux as _is_termux_environment
 from hermes_cli.browser_connect import (
+    DEFAULT_BROWSER_CDP_PORT,
     DEFAULT_BROWSER_CDP_URL,
+    ensure_local_chromium_cdp,
     is_browser_debug_ready,
     manual_chrome_debug_command,
 )
@@ -1623,7 +1625,27 @@ class CLICommandsMixin:
         parts = cmd.strip().split(None, 1)
         sub = parts[1].lower().strip() if len(parts) > 1 else "status"
 
-        _DEFAULT_CDP = DEFAULT_BROWSER_CDP_URL
+        # Pull Plan-C overrides from config.yaml (executable_path / user_data_dir
+        # / cdp_port) so /browser connect targets the same browser instance that
+        # browser_navigate's prefer_local_chromium path would auto-launch.
+        _cfg_executable_path: str = ""
+        _cfg_user_data_dir: str = ""
+        _cfg_cdp_port: int = DEFAULT_BROWSER_CDP_PORT
+        try:
+            from hermes_cli.config import read_raw_config
+
+            _browser_cfg = read_raw_config().get("browser", {})
+            if isinstance(_browser_cfg, dict):
+                _cfg_executable_path = str(_browser_cfg.get("executable_path") or "")
+                _cfg_user_data_dir = str(_browser_cfg.get("user_data_dir") or "")
+                try:
+                    _cfg_cdp_port = int(_browser_cfg.get("cdp_port") or DEFAULT_BROWSER_CDP_PORT)
+                except (TypeError, ValueError):
+                    _cfg_cdp_port = DEFAULT_BROWSER_CDP_PORT
+        except Exception:
+            pass
+
+        _DEFAULT_CDP = f"http://127.0.0.1:{_cfg_cdp_port}"
         current = os.environ.get("BROWSER_CDP_URL", "").strip()
 
         if sub.startswith("connect"):
@@ -1677,29 +1699,34 @@ class CLICommandsMixin:
             if _already_open:
                 print(f"   ✓ Chromium-family browser is already listening on port {_port}")
             elif cdp_url == _DEFAULT_CDP:
-                # Try to auto-launch a Chromium-family browser with remote debugging
+                # Try to auto-launch a Chromium-family browser with remote
+                # debugging.  Delegates to ensure_local_chromium_cdp so this
+                # uses the exact same launch path as browser_navigate's
+                # prefer_local_chromium auto-attach.
                 print("   Chromium-family browser isn't running with remote debugging — attempting to launch...")
-                _launched = self._try_launch_chrome_debug(_port, _plat.system())
-                if _launched:
-                    # Wait for the DevTools discovery endpoint to come up
-                    for _wait in range(10):
-                        if is_browser_debug_ready(cdp_url, timeout=1.0):
-                            _already_open = True
-                            break
-                        time.sleep(0.5)
-                    if _already_open:
-                        print(f"   ✓ Chromium-family browser launched and listening on port {_port}")
-                    else:
-                        print(f"   ⚠ Browser launched but port {_port} isn't responding yet")
-                        print("     Try again in a few seconds — the debug instance may still be starting")
+                _resolved = ensure_local_chromium_cdp(
+                    port=_cfg_cdp_port,
+                    executable_path=_cfg_executable_path or None,
+                    user_data_dir=_cfg_user_data_dir or None,
+                    wait_seconds=5.0,
+                )
+                if _resolved:
+                    _already_open = True
+                    print(f"   ✓ Chromium-family browser launched and listening on port {_port}")
                 else:
-                    print("   ⚠ Could not auto-launch a Chromium-family browser")
                     sys_name = _plat.system()
-                    chrome_cmd = manual_chrome_debug_command(_port, sys_name)
+                    chrome_cmd = manual_chrome_debug_command(
+                        _port,
+                        sys_name,
+                        executable_path=_cfg_executable_path or None,
+                        user_data_dir=_cfg_user_data_dir or None,
+                    )
                     if chrome_cmd:
-                        print(f"     Launch a Chromium-family browser manually:")
+                        print(f"   ⚠ Could not auto-launch a Chromium-family browser or port {_port} isn't responding yet")
+                        print("     Launch a Chromium-family browser manually:")
                         print(f"     {chrome_cmd}")
                     else:
+                        print("   ⚠ Could not auto-launch a Chromium-family browser")
                         print("     No supported Chromium-family browser executable found in this environment")
             else:
                 print(f"   ⚠ Port {_port} is not reachable at {cdp_url}")
@@ -1768,7 +1795,7 @@ class CLICommandsMixin:
                 print("🌐 Browser: connected to live Chromium-family browser via CDP")
                 print(f"   Endpoint: {current}")
 
-                _port = 9222
+                _port = DEFAULT_BROWSER_CDP_PORT
                 try:
                     _port = int(current.rsplit(":", 1)[-1].split("/")[0])
                 except (ValueError, IndexError):

@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import platform
 import shlex
 import shutil
 import subprocess
+import time
+from typing import Optional
 
 from hermes_constants import get_hermes_home
 
 
-DEFAULT_BROWSER_CDP_PORT = 9222
+logger = logging.getLogger(__name__)
+
+
+DEFAULT_BROWSER_CDP_PORT = 9226
 DEFAULT_BROWSER_CDP_URL = f"http://127.0.0.1:{DEFAULT_BROWSER_CDP_PORT}"
 
 _DARWIN_APPS = (
@@ -70,7 +76,7 @@ _LINUX_BIN_NAMES = tuple(name for names, _ in _LINUX_BROWSER_GROUPS for name in 
 _LINUX_INSTALL_PATHS = tuple(path for _, paths in _LINUX_BROWSER_GROUPS for path in paths)
 
 
-def get_chrome_debug_candidates(system: str) -> list[str]:
+def get_chrome_debug_candidates(system: str, executable_path: Optional[str] = None) -> list[str]:
     candidates: list[str] = []
     seen: set[str] = set()
 
@@ -91,6 +97,9 @@ def get_chrome_debug_candidates(system: str) -> list[str]:
             for base in filter(None, bases):
                 for parts in group:
                     add(os.path.join(base, *parts))
+
+    if executable_path:
+        add(executable_path)
 
     if system == "Darwin":
         for app in _DARWIN_APPS:
@@ -120,14 +129,16 @@ def get_chrome_debug_candidates(system: str) -> list[str]:
     return candidates
 
 
-def chrome_debug_data_dir() -> str:
+def chrome_debug_data_dir(user_data_dir: Optional[str] = None) -> str:
+    if user_data_dir:
+        return os.path.expanduser(user_data_dir)
     return str(get_hermes_home() / "chrome-debug")
 
 
-def _chrome_debug_args(port: int) -> list[str]:
+def _chrome_debug_args(port: int, user_data_dir: Optional[str] = None) -> list[str]:
     return [
         f"--remote-debugging-port={port}",
-        f"--user-data-dir={chrome_debug_data_dir()}",
+        f"--user-data-dir={chrome_debug_data_dir(user_data_dir)}",
         "--no-first-run",
         "--no-default-browser-check",
     ]
@@ -169,16 +180,21 @@ def is_browser_debug_ready(url: str, timeout: float = 1.0) -> bool:
     return False
 
 
-def manual_chrome_debug_command(port: int = DEFAULT_BROWSER_CDP_PORT, system: str | None = None) -> str | None:
+def manual_chrome_debug_command(
+    port: int = DEFAULT_BROWSER_CDP_PORT,
+    system: str | None = None,
+    executable_path: Optional[str] = None,
+    user_data_dir: Optional[str] = None,
+) -> str | None:
     system = system or platform.system()
-    candidates = get_chrome_debug_candidates(system)
+    candidates = get_chrome_debug_candidates(system, executable_path=executable_path)
 
     if candidates:
-        argv = [candidates[0], *_chrome_debug_args(port)]
+        argv = [candidates[0], *_chrome_debug_args(port, user_data_dir=user_data_dir)]
         return subprocess.list2cmdline(argv) if system == "Windows" else shlex.join(argv)
 
     if system == "Darwin":
-        data_dir = chrome_debug_data_dir()
+        data_dir = chrome_debug_data_dir(user_data_dir)
         return (
             f'open -a "Google Chrome" --args --remote-debugging-port={port} '
             f'--user-data-dir="{data_dir}" --no-first-run --no-default-browser-check'
@@ -196,17 +212,22 @@ def _detach_kwargs(system: str) -> dict:
     return {"creationflags": flags} if flags else {}
 
 
-def try_launch_chrome_debug(port: int = DEFAULT_BROWSER_CDP_PORT, system: str | None = None) -> bool:
+def try_launch_chrome_debug(
+    port: int = DEFAULT_BROWSER_CDP_PORT,
+    system: str | None = None,
+    executable_path: Optional[str] = None,
+    user_data_dir: Optional[str] = None,
+) -> bool:
     system = system or platform.system()
-    candidates = get_chrome_debug_candidates(system)
+    candidates = get_chrome_debug_candidates(system, executable_path=executable_path)
     if not candidates:
         return False
 
-    os.makedirs(chrome_debug_data_dir(), exist_ok=True)
+    os.makedirs(chrome_debug_data_dir(user_data_dir), exist_ok=True)
     for candidate in candidates:
         try:
             subprocess.Popen(
-                [candidate, *_chrome_debug_args(port)],
+                [candidate, *_chrome_debug_args(port, user_data_dir=user_data_dir)],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 **_detach_kwargs(system),
@@ -215,3 +236,53 @@ def try_launch_chrome_debug(port: int = DEFAULT_BROWSER_CDP_PORT, system: str | 
         except Exception:
             continue
     return False
+
+
+def ensure_local_chromium_cdp(
+    port: Optional[int] = None,
+    executable_path: Optional[str] = None,
+    user_data_dir: Optional[str] = None,
+    wait_seconds: float = 5.0,
+) -> Optional[str]:
+    """Ensure a local Chromium-family browser is listening on a CDP port.
+
+    Returns the resolved CDP WebSocket URL (e.g. ``ws://127.0.0.1:9226/devtools/browser/<id>``)
+    when ready, or ``None`` if no browser binary was available or the CDP
+    endpoint never came up within ``wait_seconds``.
+    """
+    resolved_port = port or DEFAULT_BROWSER_CDP_PORT
+    base_url = f"http://127.0.0.1:{resolved_port}"
+
+    if not is_browser_debug_ready(base_url):
+        if not try_launch_chrome_debug(
+            port=resolved_port,
+            executable_path=executable_path,
+            user_data_dir=user_data_dir,
+        ):
+            logger.debug("ensure_local_chromium_cdp: no Chromium-family binary discovered")
+            return None
+
+        deadline = time.monotonic() + max(wait_seconds, 0.0)
+        while time.monotonic() < deadline:
+            if is_browser_debug_ready(base_url):
+                break
+            time.sleep(0.2)
+        else:
+            logger.debug(
+                "ensure_local_chromium_cdp: CDP endpoint %s did not become ready within %.1fs",
+                base_url,
+                wait_seconds,
+            )
+            return None
+
+    try:
+        from tools.browser_tool import _resolve_cdp_override  # type: ignore[import-not-found]
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.debug("ensure_local_chromium_cdp: cannot import _resolve_cdp_override: %s", exc)
+        return base_url
+
+    try:
+        return _resolve_cdp_override(base_url) or base_url
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.debug("ensure_local_chromium_cdp: _resolve_cdp_override failed: %s", exc)
+        return base_url
