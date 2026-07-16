@@ -33,7 +33,6 @@ from hermes_cli.browser_connect import (
     DEFAULT_BROWSER_CDP_URL,
     ensure_local_chromium_cdp,
     is_browser_debug_ready,
-    launch_chrome_debug,
     manual_chrome_debug_command,
 )
 
