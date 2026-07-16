@@ -1,0 +1,16 @@
+hermes_cli/browser_connect.py
+  h_98139d55d2f26a 222
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c3a5b1e9c3447eaac4a04840c443ac763ce73dd4",
+  "prompts": {},
+  "humans": {
+    "h_98139d55d2f26a": {
+      "author": "gaoshuoshuo <gaoshuoshuo@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
